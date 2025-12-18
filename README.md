@@ -48,43 +48,204 @@ Root CA (self-signed) → User Certificate (signed by Root CA)
 
 #### 3. Digital Signature Process
 
-**Signing Process:**
-1. **Hash Generation**: Create SHA-256 hash of the document
-2. **Encryption**: Encrypt the hash with user's **private key**
-3. **Signature Creation**: The encrypted hash becomes the digital signature
-4. **Attachment**: Attach signature to document with metadata
+**📝 Signing Process Flow:**
+```
+┌──────────────┐    ┌─────────────┐    ┌──────────────┐
+│   Document   │───▶│  SHA-256    │───▶│ Document Hash│
+│ (original)   │    │  Hashing    │    │   (256-bit)  │
+└──────────────┘    └─────────────┘    └──────┬───────┘
+                                              │
+                    ┌─────────────┐          │
+                    │ User Private│          │
+                    │    Key      │          │
+                    │ (RSA 2048)  │          │
+                    └──────┬──────┘          │
+                           │                 │
+                           ▼                 ▼
+                    ┌─────────────────────────────┐
+                    │     RSA Encryption          │
+                    │   (PKCS#1 v1.5 Padding)    │
+                    └─────────────┬───────────────┘
+                                  │
+                                  ▼
+                    ┌─────────────────────────────┐
+                    │    Digital Signature        │
+                    │      (.sig file)            │
+                    └─────────────────────────────┘
+```
 
-**Verification Process:**
-1. **Signature Decryption**: Decrypt signature with user's **public key**
-2. **Hash Comparison**: Compare decrypted hash with fresh document hash
-3. **Certificate Validation**: Verify user certificate against Root CA
-4. **Result**: If hashes match and certificate is valid → **AUTHENTIC**
+**✅ Verification Process Flow:**
+```
+┌──────────────┐    ┌─────────────┐    ┌──────────────┐
+│   Document   │───▶│  SHA-256    │───▶│ Current Hash │
+│ (to verify)  │    │  Hashing    │    │   (256-bit)  │
+└──────────────┘    └─────────────┘    └──────┬───────┘
+                                              │
+┌──────────────┐    ┌─────────────┐          │
+│   Digital    │───▶│ User Public │          │
+│  Signature   │    │    Key      │          │
+│ (.sig file)  │    │ (from cert) │          │
+└──────────────┘    └──────┬──────┘          │
+                           │                 │
+                           ▼                 ▼
+                    ┌─────────────────────────────┐
+                    │     RSA Decryption          │
+                    │   → Original Hash           │
+                    └─────────────┬───────────────┘
+                                  │
+                                  ▼
+                    ┌─────────────────────────────┐
+                    │    Hash Comparison          │
+                    │ Original == Current ?       │
+                    │                             │
+                    │ ✅ MATCH = AUTHENTIC        │
+                    │ ❌ NO MATCH = TAMPERED      │
+                    └─────────────────────────────┘
+```
 
 #### 4. Public Key Infrastructure (PKI)
 
-Our system implements a simplified PKI:
-
+**🏗️ PKI Architecture:**
 ```
-┌─────────────────┐
-│    Root CA      │ ← Self-signed, trusted anchor
-│  (rootca.crt)   │
-└─────────┬───────┘
-          │ signs
-          ▼
-┌─────────────────┐
-│ User Certificate│ ← Signed by Root CA
-│ (user@email.crt)│
-└─────────┬───────┘
-          │ used for
-          ▼
-┌─────────────────┐
-│ Digital Signature│ ← Signs documents
-│ (document.sig)  │
-└─────────────────┘
+                    ┌─────────────────────────────────┐
+                    │         ROOT CA                 │
+                    │    ┌─────────────────────┐      │
+                    │    │   Private Key       │      │ ← Self-signed
+                    │    │   (rootca.key)      │      │   Trust Anchor
+                    │    └─────────────────────┘      │
+                    │    ┌─────────────────────┐      │
+                    │    │  Public Certificate │      │
+                    │    │   (rootca.crt)      │      │
+                    │    └─────────────────────┘      │
+                    └─────────────┬───────────────────┘
+                                  │ signs & issues
+                                  ▼
+        ┌─────────────────────────────────────────────────────────┐
+        │                USER CERTIFICATES                        │
+        │  ┌─────────────────┐    ┌─────────────────┐            │
+        │  │ alice@email.crt │    │  bob@email.crt  │    ...     │
+        │  │ alice@email.key │    │  bob@email.key  │            │
+        │  └─────────────────┘    └─────────────────┘            │
+        └─────────────┬───────────────────┬─────────────────────┘
+                      │                   │
+                      ▼                   ▼
+        ┌─────────────────────┐  ┌─────────────────────┐
+        │   ALICE SIGNS       │  │    BOB SIGNS        │
+        │                     │  │                     │
+        │ ┌─────────────────┐ │  │ ┌─────────────────┐ │
+        │ │ contract.pdf    │ │  │ │ report.txt      │ │
+        │ │ + signature     │ │  │ │ + signature     │ │
+        │ └─────────────────┘ │  │ └─────────────────┘ │
+        └─────────────────────┘  └─────────────────────┘
+```
+
+**🔄 Complete Workflow Diagram:**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    DIGITAL SIGNATURE WORKFLOW                   │
+└─────────────────────────────────────────────────────────────────┘
+
+1️⃣ SETUP PHASE
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   Create    │───▶│   Create    │───▶│   Ready to  │
+│  Root CA    │    │ User Certs  │    │    Sign     │
+└─────────────┘    └─────────────┘    └─────────────┘
+
+2️⃣ SIGNING PHASE
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  Original   │───▶│   Hash      │───▶│   Encrypt   │───▶│  Signature  │
+│  Document   │    │ (SHA-256)   │    │ with Priv   │    │   Created   │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+
+3️⃣ VERIFICATION PHASE
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  Document   │───▶│   Hash      │───▶│   Compare   │───▶│   Result    │
+│ + Signature │    │ + Decrypt   │    │   Hashes    │    │ ✅ or ❌    │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+
+4️⃣ FILE STRUCTURE
+certificates/
+├── alice@email.crt  ┐
+├── alice@email.key  ├─ User Identity
+├── bob@email.crt    │
+└── bob@email.key    ┘
+
+signatures/
+├── contract_alice.sig        ┐
+├── signed_contract_alice.pdf ├─ Signed Documents
+├── metadata_contract_alice.json ┘
+├── report_bob.sig           ┐
+├── signed_report_bob.pdf    ├─ Signed Documents  
+└── metadata_report_bob.json ┘
+
+rootca.crt  ← Trust Anchor (Public)
+rootca.key  ← CA Authority (Private - Keep Secret!)
 ```
 
 #### 5. Cryptographic Algorithms
 
+**🔐 RSA Key Pair Generation:**
+```
+                    ┌─────────────────────────────┐
+                    │     RSA Key Generation      │
+                    │        (2048-bit)           │
+                    └─────────────┬───────────────┘
+                                  │
+                    ┌─────────────▼───────────────┐
+                    │     Mathematical Magic      │
+                    │   p × q = n (large primes)  │
+                    │   φ(n) = (p-1)(q-1)        │
+                    │   e = 65537 (public exp)    │
+                    │   d ≡ e⁻¹ (mod φ(n))       │
+                    └─────────────┬───────────────┘
+                                  │
+                    ┌─────────────▼───────────────┐
+                    │         Key Pair            │
+                    └─────────────┬───────────────┘
+                                  │
+                ┌─────────────────┼─────────────────┐
+                ▼                                   ▼
+    ┌─────────────────────┐              ┌─────────────────────┐
+    │    PUBLIC KEY       │              │    PRIVATE KEY      │
+    │                     │              │                     │
+    │  🔓 For Verification │              │  🔐 For Signing     │
+    │  • Stored in cert   │              │  • Keep SECRET!     │
+    │  • Can be shared    │              │  • Never share      │
+    │  • (n, e)           │              │  • (n, d)           │
+    └─────────────────────┘              └─────────────────────┘
+```
+
+**🏗️ Cryptographic Stack:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    CRYPTOGRAPHIC LAYERS                     │
+├─────────────────────────────────────────────────────────────┤
+│ APPLICATION LAYER                                           │
+│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐            │
+│ │ signpdf.py  │ │ Certificates│ │ Signatures  │            │
+│ └─────────────┘ └─────────────┘ └─────────────┘            │
+├─────────────────────────────────────────────────────────────┤
+│ CRYPTOGRAPHY LIBRARY (Python)                              │
+│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐            │
+│ │   X.509     │ │     RSA     │ │   SHA-256   │            │
+│ │ Certificates│ │ Encryption  │ │   Hashing   │            │
+│ └─────────────┘ └─────────────┘ └─────────────┘            │
+├─────────────────────────────────────────────────────────────┤
+│ STANDARDS & FORMATS                                         │
+│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐            │
+│ │ PEM Format  │ │ PKCS#1 v1.5 │ │ ASN.1 DER   │            │
+│ │ Base64+Text │ │   Padding   │ │  Encoding   │            │
+│ └─────────────┘ └─────────────┘ └─────────────┘            │
+├─────────────────────────────────────────────────────────────┤
+│ MATHEMATICAL FOUNDATION                                     │
+│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐            │
+│ │ Prime Number│ │ Modular Exp │ │ Hash Function│           │
+│ │ Generation  │ │ Arithmetic  │ │ (SHA Family) │           │
+│ └─────────────┘ └─────────────┘ └─────────────┘            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**📊 Algorithm Specifications:**
 - **Key Generation**: RSA 2048-bit keys
 - **Hashing**: SHA-256 (Secure Hash Algorithm)
 - **Padding**: PKCS#1 v1.5 padding scheme
