@@ -86,7 +86,6 @@ certificates/
 
 # Sample Documents (optional - remove if you want to include samples)
 *.pdf
-*.txt
 *.doc
 *.docx
 

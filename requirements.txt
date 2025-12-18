@@ -1,0 +1,9 @@
+cffi==2.0.0
+charset-normalizer==3.4.4
+cryptography==46.0.3
+pillow==12.0.0
+pycparser==2.23
+pyOpenSSL==25.3.0
+PyPDF2==3.0.1
+reportlab==4.4.6
+typing_extensions==4.15.0
