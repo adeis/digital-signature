@@ -1,5 +1,7 @@
 # Digital Signature Manager
 
+**🌐 Language:** **English** | [Bahasa Indonesia](README-ID.md)
+
 A comprehensive Python application for creating and managing digital signatures using X.509 certificates. This tool allows you to create a Certificate Authority (CA), generate user certificates, sign documents, and verify digital signatures.
 
 ## Features
