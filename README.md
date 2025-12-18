@@ -47,7 +47,7 @@ pip install -r requirements.txt
 ### 4. Run the Application
 
 ```bash
-python signpdfnew.py
+python signpdf.py
 ```
 
 ## Dependencies
@@ -65,7 +65,7 @@ The application requires the following Python packages:
 Run the application and follow the menu prompts:
 
 ```bash
-python signpdfnew.py
+python signpdf.py
 ```
 
 ### Menu Options
@@ -90,7 +90,7 @@ python signpdfnew.py
 
 Force recreate Root CA:
 ```bash
-python signpdfnew.py --force
+python signpdf.py --force
 ```
 
 ## Workflow
@@ -134,7 +134,7 @@ python signpdfnew.py --force
 
 ```
 project/
-├── signpdfnew.py          # Main application
+├── signpdf.py          # Main application
 ├── requirements.txt       # Python dependencies
 ├── certificates/          # User certificates and keys
 │   ├── user@example.com.crt
@@ -163,7 +163,7 @@ project/
 
 ```bash
 # 1. Start the application
-python signpdfnew.py
+python signpdf.py
 
 # 2. Create Root CA (first time only)
 Select option: 1
@@ -243,9 +243,9 @@ This tool is for educational and development purposes. For production use in cri
 
 ## Author
 
-Created by [Your Name]
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
+Created by Ade Iskandar
+- GitHub: [@adeis](https://github.com/adeis)
+
 
 ## Changelog
 

@@ -36,8 +36,8 @@ jobs:
     
     - name: Test import
       run: |
-        python -c "from signpdfnew import DigitalSignatureManager; print('Import successful')"
+        python -c "from signpdf import DigitalSignatureManager; print('Import successful')"
     
     - name: Test compilation
       run: |
-        python -m py_compile signpdfnew.py
+        python -m py_compile signpdf.py
