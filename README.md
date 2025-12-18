@@ -12,6 +12,126 @@ A comprehensive Python application for creating and managing digital signatures 
 - 📄 **PDF Watermarking** - Add signature watermarks to signed PDF documents
 - 📊 **Metadata Management** - Store and retrieve signature metadata in JSON format
 
+## Concept
+
+### What is Digital Signature?
+
+Digital signatures are cryptographic mechanisms that provide:
+- **Authentication** - Verify the identity of the signer
+- **Integrity** - Ensure the document hasn't been modified
+- **Non-repudiation** - Prevent the signer from denying they signed the document
+
+### Key Components
+
+#### 1. Root Certificate Authority (Root CA)
+The **Root CA** is the foundation of trust in our digital signature system:
+- Acts as the **trusted third party** that issues and validates certificates
+- Has a **self-signed certificate** (it signs its own certificate)
+- Contains a **public-private key pair**:
+  - **Private key**: Used to sign user certificates (kept secret)
+  - **Public key**: Used to verify certificates issued by this CA
+- **Validity period**: Typically 10 years (3650 days)
+- **Trust anchor**: All certificates in the system derive their trust from the Root CA
+
+#### 2. User Certificates (X.509)
+User certificates are **digital identity cards** that contain:
+- **Public key** of the user
+- **Identity information** (email, name, organization)
+- **Digital signature from Root CA** (proves authenticity)
+- **Validity period** (typically 1 year)
+- **Serial number** (unique identifier)
+
+**Certificate Chain of Trust:**
+```
+Root CA (self-signed) → User Certificate (signed by Root CA)
+```
+
+#### 3. Digital Signature Process
+
+**Signing Process:**
+1. **Hash Generation**: Create SHA-256 hash of the document
+2. **Encryption**: Encrypt the hash with user's **private key**
+3. **Signature Creation**: The encrypted hash becomes the digital signature
+4. **Attachment**: Attach signature to document with metadata
+
+**Verification Process:**
+1. **Signature Decryption**: Decrypt signature with user's **public key**
+2. **Hash Comparison**: Compare decrypted hash with fresh document hash
+3. **Certificate Validation**: Verify user certificate against Root CA
+4. **Result**: If hashes match and certificate is valid → **AUTHENTIC**
+
+#### 4. Public Key Infrastructure (PKI)
+
+Our system implements a simplified PKI:
+
+```
+┌─────────────────┐
+│    Root CA      │ ← Self-signed, trusted anchor
+│  (rootca.crt)   │
+└─────────┬───────┘
+          │ signs
+          ▼
+┌─────────────────┐
+│ User Certificate│ ← Signed by Root CA
+│ (user@email.crt)│
+└─────────┬───────┘
+          │ used for
+          ▼
+┌─────────────────┐
+│ Digital Signature│ ← Signs documents
+│ (document.sig)  │
+└─────────────────┘
+```
+
+#### 5. Cryptographic Algorithms
+
+- **Key Generation**: RSA 2048-bit keys
+- **Hashing**: SHA-256 (Secure Hash Algorithm)
+- **Padding**: PKCS#1 v1.5 padding scheme
+- **Certificate Format**: X.509 v3 standard
+- **Encoding**: PEM (Privacy-Enhanced Mail) format
+
+#### 6. Security Considerations
+
+**Private Key Security:**
+- Private keys are stored **unencrypted** for simplicity (development use)
+- In production, use **password-protected** private keys
+- Store private keys in **secure hardware** (HSM) for maximum security
+
+**Certificate Validation:**
+- Always verify certificate chain back to trusted Root CA
+- Check certificate **expiration dates**
+- Validate certificate **revocation status** (not implemented in this demo)
+
+**Document Integrity:**
+- Any modification to signed document **breaks the signature**
+- Hash comparison detects even **single bit changes**
+- Metadata stores original hash for **integrity verification**
+
+### File Structure Explained
+
+```
+certificates/           # User certificates and private keys
+├── user@email.crt     # User's public certificate
+└── user@email.key     # User's private key (keep secret!)
+
+signatures/            # Signed documents and metadata
+├── document_user.sig  # Digital signature file
+├── signed_document_user.pdf  # Signed PDF with watermark
+└── metadata_document_user.json  # Signature metadata
+
+rootca.crt            # Root CA public certificate
+rootca.key            # Root CA private key (keep secret!)
+```
+
+### Trust Model
+
+This system uses a **hierarchical trust model**:
+1. **Root CA** is the ultimate trust anchor
+2. **User certificates** derive trust from Root CA signature
+3. **Document signatures** derive trust from user certificates
+4. **Verification** follows the chain: Document → User Cert → Root CA
+
 ## Requirements
 
 - Python 3.7+
