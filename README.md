@@ -4,6 +4,8 @@
 
 A comprehensive Python application for creating and managing digital signatures using X.509 certificates. This tool allows you to create a Certificate Authority (CA), generate user certificates, sign documents, and verify digital signatures.
 
+for multi-signature, see [README-MULTI.md](README-MULTI.md)
+
 ## Features
 
 - 🔐 **Root CA Management** - Create and manage your own Certificate Authority

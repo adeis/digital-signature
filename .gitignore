@@ -83,6 +83,8 @@ Desktop.ini
 # Signature Files
 signatures/
 certificates/
+multisig_contract.txt
+multisignatures/
 
 # Sample Documents (optional - remove if you want to include samples)
 *.pdf
